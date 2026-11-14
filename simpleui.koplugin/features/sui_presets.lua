@@ -1153,7 +1153,9 @@ return {
         applyBuiltin = SUIPresets.applyBuiltin,
 
     -- Homescreen preset menu items (shared between sui_menu and sui_layout_editor)
-    makeMenuItems = SUIPresets.makeMenuItems,
+    makeMenuItems  = SUIPresets.makeMenuItems,
+    -- Used by screens/sui_onboarding.lua to render the preset picker.
+    buildListRows  = SUIPresets.buildListRows,
     icons = SUIIconPresets,
 
     -- Shared name prompt for any preset store (see promptName)

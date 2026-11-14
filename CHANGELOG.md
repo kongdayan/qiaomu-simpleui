@@ -1,5 +1,13 @@
 # 更新记录 / Changelog
 
+## 未发布 / Unreleased
+
+- 修复自动更新检查必然失败：`/releases/latest` 只返回正式版，而本仓库全部版本都是 pre-release，接口恒返回 404。改为读取 release 列表（新的在前），并跳过没有插件 ZIP 资产的条目；「打开release 页面」的链接也改为 `/releases`。
+- 修复全新安装首次启动时，onboarding「选择初始布局」报 `attempt to call field 'buildListRows' (a nil value)`：`features/sui_presets.lua` 的导出表补上 `buildListRows`。
+- 新增回归测试：覆盖单对象/列表 payload、跳过无资产条目、无 `json` 模块时的正则回退、空列表，以及 onboarding 用到的 `SUIPresets` 符号是否都已导出。
+
+English: discover pre-release updates through the release list and skip entries without the plugin ZIP; export `buildListRows` so the onboarding preset picker renders; pin both regressions in tests.
+
 ## v3.0.0-qiaomu.21 — 测试版 / Prerelease
 
 - 为 Kindle 资讯 API 及图片下载随包提供经 SHA-256 校验的 Mozilla CA，保留 HTTPS 证书和主机名验证。

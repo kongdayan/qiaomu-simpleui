@@ -39,8 +39,12 @@ local GS_HAS_UPDATE = "sui_upd_has_update"  -- boolean
 local GS_LATEST_VER = "sui_upd_latest_ver"  -- string without "v"
 local GS_DL_URL     = "sui_upd_dl_url"      -- string URL
 
+-- GitHub's /releases/latest only answers with a *stable* release. Every release
+-- of this repository is a pre-release, so that endpoint returns 404 forever and
+-- the update check could never succeed. Ask for the release list instead (the
+-- API returns it newest first) and pick the first usable entry ourselves.
 local _API_URL = string.format(
-    "https://api.github.com/repos/%s/%s/releases/latest",
+    "https://api.github.com/repos/%s/%s/releases?per_page=10",
     GITHUB_OWNER, GITHUB_REPO
 )
 
@@ -289,6 +293,27 @@ local function _parseRelease(body)
         return nil, "JSON parse error: " .. tostring(data)
     end
 
+    -- The list endpoint answers with an array of releases, the single-release
+    -- endpoint with one object: accept both. Prefer the newest release that
+    -- actually ships our asset, so a tag-only release cannot shadow it.
+    if data.tag_name == nil then
+        local first, with_asset
+        for _, rel in ipairs(data) do
+            if type(rel) == "table" and rel.tag_name then
+                first = first or rel
+                for _, asset in ipairs(rel.assets or {}) do
+                    if asset.name == ASSET_NAME then
+                        with_asset = rel
+                        break
+                    end
+                end
+                if with_asset then break end
+            end
+        end
+        data = with_asset or first
+        if not data then return nil, "no releases found" end
+    end
+
     local tag = data.tag_name
     if not tag then return nil, "tag_name missing from API response" end
 
@@ -502,7 +527,7 @@ local function _showUpdateDialog(release, current)
                 local Device = require("device")
                 if Device:canOpenLink() then
                     Device:openLink(string.format(
-                        "https://github.com/%s/%s/releases/latest",
+                        "https://github.com/%s/%s/releases",
                         GITHUB_OWNER, GITHUB_REPO
                     ))
                 end
